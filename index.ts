@@ -1,149 +1,53 @@
-require('chromedriver');
-import webdriver, { By, until, Key } from 'selenium-webdriver';
-import cliboardy from './utils/cliboardy';
-import sleep from './utils/sleep';
+import xlsx from 'node-xlsx';
+import path from 'path';
+import fs from 'fs';
+import naverBot from './bot/naver-bot';
+
+export type WriteInformationType = {
+  userId: string | unknown;
+  userPw: string | unknown;
+  originContentsUrl: string | unknown;
+  targetCafeUrl: string | unknown;
+  title: string | unknown;
+  category: string | unknown;
+};
 
 (async function () {
-  const driver = new webdriver.Builder().forBrowser('chrome').build();
-  const actions = driver.actions({ async: true, bridge: true });
+  const inputFilePath = path.resolve(__dirname, './xlsx/input.xlsx');
 
-  const metaKey = process.platform === 'win32' ? Key.CONTROL : Key.META;
-
-  const config = {
-    id: process.env.userID,
-    pw: process.env.userPW,
-    originContentsUrl: process.env.originContentsUrl,
-    targetCafeUrl: process.env.targetCafeUrl,
-    title: process.env.title,
-    category: process.env.category || '반도체',
-  };
-
-  if (!config.category) {
-    throw new Error('Missing value');
+  if (!fs.existsSync(inputFilePath)) {
+    throw new Error('input 엑셀 파일이 존재하지 않습니다.');
   }
 
-  // 로그인
-  try {
-    await driver.get('https://nid.naver.com/nidlogin.login');
+  // To-do delete-list.xlsx 파일이 존재하면 자동으로 삭제 하도록 처리
 
-    await driver.wait(until.elementLocated(By.id('id')));
-    await driver.wait(until.elementLocated(By.id('pw')));
+  const inputSheet = xlsx.parse(inputFilePath);
+  const { data } = inputSheet[0];
 
-    const idInput = driver.findElement(By.id('id'));
-    const pwInput = driver.findElement(By.id('pw'));
+  const writeInformations = data
+    .slice(1, data.length)
+    .map((row, index) => {
+      if (row.filter(Boolean).length !== 6) {
+        console.error(
+          `${index + 1} 번째 줄에서 필수 항목중에 존재하지 않는 값이 있습니다.`,
+        );
+        process.exit(1);
+      }
 
-    // id
-    await cliboardy(`${config.id}`);
-    idInput.sendKeys(metaKey + 'V');
-    await sleep(1000);
+      const result = {
+        userId: row[0],
+        userPw: row[1],
+        originContentsUrl: row[2],
+        targetCafeUrl: row[3],
+        title: row[4],
+        category: row[5],
+      };
+      return result;
+    })
+    .filter(Boolean);
 
-    // password
-    await cliboardy(`${config.pw}`);
-    pwInput.sendKeys(metaKey + 'V');
-
-    const loginButton = driver.findElement(By.id('log.login'));
-    loginButton.click();
-
-    await sleep(1000);
-  } catch (err) {
-    console.log(err);
-    await driver.quit();
-  }
-
-  try {
-    // 미리 입력한 글 수정 경로
-    await driver.get(`${config.originContentsUrl}`);
-    await sleep(3000);
-
-    await driver.wait(until.elementLocated(By.className('se-content')));
-    const container = driver.findElement(By.className('se-component-content'));
-    const offset = await container.getRect();
-
-    driver.executeScript(
-      'return window.scrollTo(' + offset.x + ',' + (offset.height + 400) + ');',
-    );
-
-    await sleep(1000);
-
-    await driver.wait(until.elementLocated(By.className('se-component')));
-    const frame = driver.findElement(By.xpath('//*[contains(text(),본문)]'));
-    frame.click();
-
-    await sleep(1000);
-    await actions.keyDown(metaKey).sendKeys('a').keyUp(metaKey).perform();
-
-    await sleep(1000);
-    await actions.keyDown(metaKey).sendKeys('c').keyUp(metaKey).perform();
-  } catch (err) {
-    console.log(err);
-    await driver.quit();
-  }
-
-  try {
-    // 카페 고유 id 구하기
-    const targetSite = `${config.targetCafeUrl}`;
-    await driver.switchTo().newWindow('tab');
-    await driver.get(targetSite);
-    await driver.wait(until.elementLocated(By.name('clubid')));
-    const clubIdInput = await driver.findElement(By.name('clubid'));
-    const clubId = await clubIdInput.getAttribute('value');
-
-    // 글쓰기 화면 이동
-    const targetSiteWriteURI = `https://cafe.naver.com/ca-fe/cafes/${clubId}/articles/write?boardType=L`;
-    driver.get(targetSiteWriteURI);
-
-    await sleep(1000);
-
-    await driver.wait(until.elementLocated(By.className('FormSelectButton')));
-    const selectorBox = await driver.findElement(
-      By.css('.FormSelectButton > .button'),
-    );
-
-    selectorBox.click();
-
-    // 카테고리 선택
-    const options = await driver
-      .findElement(By.css('.option_list'))
-      .findElements(By.className('item'));
-
-    await sleep(1000);
-
-    let categoryIndex: null | number = null;
-    await Promise.all(
-      options.map(async (el, index) => {
-        const text = await el.findElement(By.css('button')).getText();
-        if (text.trim().includes(config.category)) {
-          categoryIndex = index;
-        }
-      }),
-    );
-
-    if (categoryIndex === null) {
-      throw new Error('선택하신 카테고리를 찾지 못했습니다.');
-    }
-
-    options[categoryIndex].click();
-    await sleep(1000);
-
-    // 제목 입력하기
-    const titleInput = await driver.findElement(By.className('textarea_input'));
-
-    titleInput.click();
-    await titleInput.sendKeys(`${config.title}`);
-
-    await sleep(1000);
-
-    // 글쓰기
-    const contents = await driver.findElement(
-      By.xpath('//span[contains(text(),"내용을")]'),
-    );
-
-    contents.click();
-    await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
-
-    console.log('paste');
-  } catch (err) {
-    console.log(err);
-    await driver.quit();
-  }
+  // Run naver cafe bot
+  await Promise.all(
+    writeInformations.map(async (config) => await naverBot(config)),
+  );
 })();
