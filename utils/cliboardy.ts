@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+import childProcess from 'child_process';
+
 const cliboardy = (data: string): Promise<void> => {
   return new Promise((resolve) => {
-    const proc = require('child_process').spawn('pbcopy');
-    proc.stdin.write(data);
-    proc.stdin.end();
+    const isWin = process.platform === 'win32';
+    const clipboard = childProcess.spawn(isWin ? 'clip' : 'pbcopy');
+    clipboard.stdin.write(data);
+    clipboard.stdin.end();
     resolve();
   });
 };
-
 export default cliboardy;

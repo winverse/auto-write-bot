@@ -7,6 +7,8 @@ import sleep from './utils/sleep';
   const driver = new webdriver.Builder().forBrowser('chrome').build();
   const actions = driver.actions({ async: true, bridge: true });
 
+  const metaKey = process.platform === 'win32' ? Key.CONTROL : Key.META;
+
   const config = {
     id: process.env.userID,
     pw: process.env.userPW,
@@ -32,12 +34,12 @@ import sleep from './utils/sleep';
 
     // id
     await cliboardy(`${config.id}`);
-    idInput.sendKeys(Key.META + 'V');
+    idInput.sendKeys(metaKey + 'V');
     await sleep(1000);
 
     // password
     await cliboardy(`${config.pw}`);
-    pwInput.sendKeys(Key.META + 'V');
+    pwInput.sendKeys(metaKey + 'V');
 
     const loginButton = driver.findElement(By.id('log.login'));
     loginButton.click();
@@ -68,10 +70,10 @@ import sleep from './utils/sleep';
     frame.click();
 
     await sleep(1000);
-    await actions.keyDown(Key.META).sendKeys('a').keyUp(Key.META).perform();
+    await actions.keyDown(metaKey).sendKeys('a').keyUp(metaKey).perform();
 
     await sleep(1000);
-    await actions.keyDown(Key.META).sendKeys('c').keyUp(Key.META).perform();
+    await actions.keyDown(metaKey).sendKeys('c').keyUp(metaKey).perform();
   } catch (err) {
     console.log(err);
     await driver.quit();
@@ -137,7 +139,7 @@ import sleep from './utils/sleep';
     );
 
     contents.click();
-    await actions.keyDown(Key.META).sendKeys('v').keyUp(Key.META).perform();
+    await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
 
     console.log('paste');
   } catch (err) {
