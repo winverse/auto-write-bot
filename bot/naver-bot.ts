@@ -117,7 +117,7 @@ async function naverBot({
     contents.click();
     await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
 
-     // 카테고리 선택
+    // 카테고리 선택
     await driver.wait(until.elementLocated(By.className('FormSelectButton')));
     const selectorBox = await driver.findElement(
       By.css('.FormSelectButton > .button'),
@@ -155,7 +155,7 @@ async function naverBot({
     if (alert) {
       await alert.accept();
     }
-    
+
     console.log('paste');
   } catch (err) {
     console.log(err);
