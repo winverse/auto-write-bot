@@ -26,6 +26,7 @@ export type WriteInformationType = {
 
   const writeInformations = data
     .slice(1, data.length)
+    .filter((v) => v.length > 0)
     .map((row, index) => {
       if (row.filter(Boolean).length !== 6) {
         console.error(

@@ -2,4 +2,4 @@
 .env
 .vs
 
-xlsx/*.xlsx
+xlsx/input.xlsx

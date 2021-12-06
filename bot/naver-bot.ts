@@ -100,62 +100,73 @@ async function naverBot({
     const targetSiteWriteURI = `https://cafe.naver.com/ca-fe/cafes/${clubId}/articles/write?boardType=L`;
     driver.get(targetSiteWriteURI);
 
-    await sleep(1000);
-    // 제목 입력하기
-    const titleInput = await driver.findElement(By.className('textarea_input'));
+    await sleep(2000);
 
-    titleInput.click();
-    await titleInput.sendKeys(`${config.title}`);
+    // // 제목 입력하기
+    // await driver.wait(until.elementLocated(By.className('textarea_input')));
+    // const titleInput = await driver.findElement(By.className('textarea_input'));
 
-    await sleep(1000);
+    // if (titleInput) {
+    //   titleInput.click();
+    //   await titleInput.sendKeys(`${config.title}`);
+    // }
 
-    // 글쓰기
-    const contents = await driver.findElement(
-      By.xpath('//span[contains(text(),"내용을")]'),
-    );
+    // await sleep(1000);
 
-    contents.click();
-    await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
+    // // 글쓰기
+    // const contents = await driver.findElement(
+    //   By.xpath('//span[contains(text(),"내용을")]'),
+    // );
+
+    // contents.click();
+    // await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
 
     // 카테고리 선택
     await driver.wait(until.elementLocated(By.className('FormSelectButton')));
     const selectorBox = await driver.findElement(
-      By.css('.FormSelectButton > .button'),
+      By.css('.FormSelectButton > button'),
     );
 
-    selectorBox.click();
+    // await driver.executeScript(`
+    //   const option = document.querySelector('.option_list');
+    //   option.style.display = 'block !important';
+    // `);
 
-    const options = await driver
-      .findElement(By.css('.option_list'))
-      .findElements(By.className('item'));
+    if (selectorBox) {
+      await actions.move({ origin: selectorBox }).click().perform();
 
-    await sleep(1000);
+      const options = await driver
+        .findElement(By.css('.option_list'))
+        .findElements(By.className('item'));
 
-    let categoryIndex: null | number = null;
-    await Promise.all(
-      options.map(async (el, index) => {
-        const text = await el.findElement(By.css('button')).getText();
-        if (text.trim().includes(config.category as string)) {
-          categoryIndex = index;
-        }
-      }),
-    );
+      await sleep(1000);
 
-    if (categoryIndex === null) {
-      throw new Error('선택하신 카테고리를 찾지 못했습니다.');
+      let categoryIndex: null | number = null;
+      await Promise.all(
+        options.map(async (el, index) => {
+          const text = await el.findElement(By.css('button')).getText();
+          console.log(config.category);
+          if (text.trim().includes(config.category as string)) {
+            categoryIndex = index;
+          }
+        }),
+      );
+
+      if (categoryIndex === null) {
+        throw new Error('선택하신 카테고리를 찾지 못했습니다.');
+      }
+
+      options[categoryIndex].click();
+
+      await sleep(2000);
+
+      await driver.wait(until.alertIsPresent(), 2000);
+      const alert = await driver.switchTo().alert();
+
+      if (alert) {
+        await alert.accept();
+      }
     }
-
-    options[categoryIndex].click();
-
-    await sleep(2000);
-
-    await driver.wait(until.alertIsPresent(), 2000);
-    const alert = await driver.switchTo().alert();
-
-    if (alert) {
-      await alert.accept();
-    }
-
     console.log('paste');
   } catch (err) {
     console.log(err);
