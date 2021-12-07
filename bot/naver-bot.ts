@@ -102,24 +102,24 @@ async function naverBot({
 
     await sleep(2000);
 
-    // // 제목 입력하기
-    // await driver.wait(until.elementLocated(By.className('textarea_input')));
-    // const titleInput = await driver.findElement(By.className('textarea_input'));
+    // 제목 입력하기
+    await driver.wait(until.elementLocated(By.className('textarea_input')));
+    const titleInput = await driver.findElement(By.className('textarea_input'));
 
-    // if (titleInput) {
-    //   titleInput.click();
-    //   await titleInput.sendKeys(`${config.title}`);
-    // }
+    if (titleInput) {
+      titleInput.click();
+      await titleInput.sendKeys(`${config.title}`);
+    }
 
-    // await sleep(1000);
+    await sleep(1000);
 
-    // // 글쓰기
-    // const contents = await driver.findElement(
-    //   By.xpath('//span[contains(text(),"내용을")]'),
-    // );
+    // 글쓰기
+    const contents = await driver.findElement(
+      By.xpath('//span[contains(text(),"내용을")]'),
+    );
 
-    // contents.click();
-    // await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
+    contents.click();
+    await actions.keyDown(metaKey).sendKeys('v').keyUp(metaKey).perform();
 
     // 카테고리 선택
     await driver.wait(until.elementLocated(By.className('FormSelectButton')));
@@ -144,8 +144,7 @@ async function naverBot({
       let categoryIndex: null | number = null;
       await Promise.all(
         options.map(async (el, index) => {
-          const text = await el.findElement(By.css('button')).getText();
-          console.log(config.category);
+          const text = await el.findElement(By.css('.option')).getText();
           if (text.trim().includes(config.category as string)) {
             categoryIndex = index;
           }

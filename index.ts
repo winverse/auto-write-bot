@@ -19,7 +19,7 @@ export type WriteInformationType = {
     throw new Error('input 엑셀 파일이 존재하지 않습니다.');
   }
 
-  // To-do delete-list.xlsx 파일이 존재하면 자동으로 삭제 하도록 처리
+  // To-do delete.xlsx 파일이 존재하면 자동으로 삭제 하도록 처리
 
   const inputSheet = xlsx.parse(inputFilePath);
   const { data } = inputSheet[0];
