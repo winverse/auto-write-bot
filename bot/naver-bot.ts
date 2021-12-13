@@ -42,8 +42,15 @@ async function naverBot({
 
     // id
     await cliboardy(`${config.userId}`);
-    idInput.sendKeys(metaKey + 'V');
+    await idInput.sendKeys(metaKey + 'V');
     await sleep(1000);
+
+    const idInputValue = await idInput.getAttribute('value');
+
+    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(idInputValue)) {
+      console.error('한글키를 영어로 바꿔주세요');
+      process.exit(1);
+    }
 
     // password
     await cliboardy(`${config.userPw}`);

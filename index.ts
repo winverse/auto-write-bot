@@ -49,6 +49,8 @@ export type WriteInformationType = {
 
   // Run naver cafe bot
   await Promise.all(
-    writeInformations.map(async (config) => await naverBot(config)),
+    writeInformations.map((config, index) => {
+      setTimeout(async () => await naverBot(config), index * 1000);
+    }),
   );
 })();

@@ -3,3 +3,5 @@
 .vs
 
 xlsx/input.xlsx
+
+.DS_Store
